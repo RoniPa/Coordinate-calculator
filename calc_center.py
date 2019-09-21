@@ -50,7 +50,7 @@ def geographic_midpoint(coords):
     center = [val / weight_sum for val in center]
     lon = math.atan2(center[1], center[0])
     lat = math.atan2(center[2], hypotenuse(center[0], center[1]))
-    
+
     return lat, lon
 
 
