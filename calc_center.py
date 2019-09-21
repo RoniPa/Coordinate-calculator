@@ -50,7 +50,7 @@ def geographic_midpoint(coords):
         center[0] += c.x * weight
         center[1] += c.y * weight
         center[2] += c.z * weight
-    
+
     center = [val / weight_sum for val in center]
     lon_radians = math.atan2(center[1], center[0])
     lat_radians = math.atan2(center[2], hypotenuse(center[0], center[1]))
@@ -67,7 +67,7 @@ def haversine(coord1, coord2, R):
         coord2  -- second coordinate in decimal degrees
         R       -- (Earth) radius, e.g., 6371000
     """
-    
+
     lat1 = degtorad(coord1[0])
     lon1 = degtorad(coord1[1])
 
