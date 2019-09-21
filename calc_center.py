@@ -76,7 +76,9 @@ def dist_spherical(coord1, coord2, R):
 
 
 def get_testpoints(lat, lon, radius=(math.pi/2), count=8):
-    """Give test points around a circle from given point."""
+    """ Give test points around a circle from given point.
+        TODO: ugly-ass function, make nicer
+    """
     latlim = math.pi/2
     lonlim = math.pi
 
@@ -105,8 +107,6 @@ def get_testpoints(lat, lon, radius=(math.pi/2), count=8):
         points.append([lat_, lon_])
         angle += interval
 
-    print('From point {}, {}'.format(lat, lon))
-    print('{}'.format([[radtodeg(x) for x in p] for p in points]))
     return points
 
 
