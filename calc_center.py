@@ -116,7 +116,7 @@ def center_of_min_distance(coords, start, R):
 
         testpoints = get_testpoints(start[0], start[1], test_distance)
 
-    return center
+    return center, min_distance
 
 
 if __name__ == '__main__':
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
     midpoint = geographic_midpoint(coords)
     max_dist = max([dist_spherical(midpoint, coord, R) for coord in coords])
-    center = center_of_min_distance(coords, midpoint, R)
+    center, max_c = center_of_min_distance(coords, midpoint, R)
 
     print('Geographic midpoint for coordinates is {}, {}'.format(
         radtodeg(midpoint[0]),
@@ -138,4 +138,5 @@ if __name__ == '__main__':
     print('Center with minimum distance to coordinates is {}, {}'.format(
         radtodeg(center[0]),
         radtodeg(center[1])))
-    print('Furthest coordinate is {0:.2f} km from midpoint.'.format(max_dist))
+    print('Furthest coordinate is {0:.2f} km from midpoint '.format(max_dist) +
+          'and {0:.2f} km from center.'.format(max_c))
