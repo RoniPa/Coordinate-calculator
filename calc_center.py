@@ -19,12 +19,8 @@ def radtodeg(rad):
 
 
 def to_cartesian(lat, lon):
-    """Converts degree coordinate to cartesian (x, y, z) coordinates."""
+    """Converts radian coordinate to cartesian (x, y, z) coordinates."""
     CartesianPoint = namedtuple('CartesianPoint', 'x y z')
-
-    # Degrees to radians
-    lat = degtorad(lat)
-    lon = degtorad(lon)
 
     # Calculate coordinates
     x = math.cos(lat) * math.cos(lon)
@@ -36,7 +32,7 @@ def to_cartesian(lat, lon):
 
 def geographic_midpoint(coords):
     """ Calculate the geographic midpoint
-        for a list of decimal degree coordinates.
+        for a list of radian coordinates.
     """
     # deg to cartesian coords
     coords = [to_cartesian(*coord) for coord in coords]
@@ -52,35 +48,75 @@ def geographic_midpoint(coords):
         center[2] += c.z * weight
 
     center = [val / weight_sum for val in center]
-    lon_radians = math.atan2(center[1], center[0])
-    lat_radians = math.atan2(center[2], hypotenuse(center[0], center[1]))
-    lon = radtodeg(lon_radians)
-    lat = radtodeg(lat_radians)
-
+    lon = math.atan2(center[1], center[0])
+    lat = math.atan2(center[2], hypotenuse(center[0], center[1]))
+    
     return lat, lon
 
 
-def haversine(coord1, coord2, R):
-    """ Use haversine formula to calculate distance between two coordinates.
+def dist_spherical(coord1, coord2, R):
+    """ Use spherical law of cosines to calculate distance between two coordinates.
 
         coord1  -- first coordinate in decimal degrees
         coord2  -- second coordinate in decimal degrees
         R       -- (Earth) radius, e.g., 6371000
     """
 
-    lat1 = degtorad(coord1[0])
-    lon1 = degtorad(coord1[1])
+    lat1 = coord1[0]
+    lon1 = coord1[1]
+    lat2 = coord2[0]
+    lon2 = coord2[1]
 
-    lat2 = degtorad(coord2[0])
-    lon2 = degtorad(coord2[1])
+    c = math.acos(
+        math.sin(lat1) * math.sin(lat2) +
+        math.cos(lat1) * math.cos(lat2) *
+        math.cos(lon2 - lon1))
 
-    a = math.pow(math.sin((lat1-lat2) / 2), 2) + \
-        math.cos(lat1) * math.cos(lat2) * \
-        math.pow(math.sin((lon1-lon2) / 2), 2)
+    return c * R
 
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
-    return R * c
+def get_testpoints(lat, lon, radius=(math.pi/2), count=8):
+    """Give test points around a circle from given point."""
+
+    interval = 2 * math.pi / count
+    angle = 0
+
+    points = []
+    for _ in range(8):
+        points.append([
+            lat + radius * math.cos(angle),
+            lon + radius * math.sin(angle)
+        ])
+        angle += interval
+
+    return points
+
+
+def center_of_min_distance(coords, start, R):
+    """Find the center with minimum max distance for a set of coordinates."""
+    test_distance = math.pi / 2
+    center = start
+    testpoints = coords
+    min_distance = max(
+        [dist_spherical(start, coord, R) for coord in coords])
+
+    while (test_distance > 0.00000002):
+        curr_min = center
+
+        for coord in testpoints:
+            current = max([dist_spherical(coord, x, R) for x in coords])
+            if current < min_distance:
+                min_distance = current
+                curr_min = coord
+
+        if (curr_min[0] == center[0] and curr_min[1] == center[1]):
+            test_distance /= 2
+        else:
+            center = curr_min
+
+        testpoints = get_testpoints(start[0], start[1], test_distance)
+
+    return center
 
 
 if __name__ == '__main__':
@@ -90,10 +126,16 @@ if __name__ == '__main__':
     coords = []
     with open('coords.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
-        coords = [[float(x) for x in row] for row in csv_reader]
+        coords = [[degtorad(float(x)) for x in row] for row in csv_reader]
 
     midpoint = geographic_midpoint(coords)
-    max_dist = max([haversine(midpoint, coord, R) for coord in coords])
+    max_dist = max([dist_spherical(midpoint, coord, R) for coord in coords])
+    center = center_of_min_distance(coords, midpoint, R)
 
-    print('Center of coordinates is {}, {}'.format(midpoint[0], midpoint[1]))
+    print('Geographic midpoint for coordinates is {}, {}'.format(
+        radtodeg(midpoint[0]),
+        radtodeg(midpoint[1])))
+    print('Center with minimum distance to coordinates is {}, {}'.format(
+        radtodeg(center[0]),
+        radtodeg(center[1])))
     print('Furthest coordinate is {0:.2f} km from midpoint.'.format(max_dist))
