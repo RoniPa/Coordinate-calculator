@@ -137,6 +137,11 @@ def center_of_min_distance(coords, start, R):
     return center, min_distance
 
 
+def avg_lat_lon(coords):
+    """Calculate mathematical average for latitudes and longitudes."""
+    return [sum(c[0] for c in coords) / len(coords), sum(c[1] for c in coords) / len(coords)]
+
+
 if __name__ == '__main__':
     # earth radius, kilometres
     R = 6371
@@ -149,6 +154,8 @@ if __name__ == '__main__':
     midpoint = geographic_midpoint(coords)
     max_dist = max([dist_spherical(midpoint, coord, R) for coord in coords])
     center, max_c = center_of_min_distance(coords, midpoint, R)
+    aveg = avg_lat_lon(coords)
+    max_aveg = max([dist_spherical(aveg, coord, R) for coord in coords])
 
     print('Geographic midpoint for coordinates is {}, {}'.format(
         radtodeg(midpoint[0]),
@@ -156,5 +163,9 @@ if __name__ == '__main__':
     print('Center with minimum distance to coordinates is {}, {}'.format(
         radtodeg(center[0]),
         radtodeg(center[1])))
+    print('Average for coordinates is {}, {}'.format(
+        radtodeg(aveg[0]),
+        radtodeg(aveg[1])))
     print('Furthest coordinate is {0:.2f} km from midpoint '.format(max_dist) +
-          'and {0:.2f} km from center.'.format(max_c))
+          'and {0:.2f} km from center '.format(max_c) +
+          'and {0:.2f} km from average.'.format(max_aveg))
